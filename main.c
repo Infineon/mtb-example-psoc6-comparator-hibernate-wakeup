@@ -81,11 +81,17 @@ static void lpcomp_enter_hibernate_mode(cyhal_syspm_hibernate_source_t lpcomp_wa
     /*brief Releases the UART interface allowing it to be used for other purposes*/
     cy_retarget_io_deinit();
 
+    /*Set the GPIO Drive mode to High Impedance to eliminate garbage data in UART */
+    #ifdef TARGET_APP_CY8CKIT_062S2_43012
+    Cy_GPIO_SetDrivemode(GPIO_PRT5, 1, CY_GPIO_DM_HIGHZ);
+    #endif
 
     /* Set the wake-up signal from Hibernate and Jump into Hibernate */
     status = cyhal_syspm_hibernate(lpcomp_wakeup_src);
     if (status != CY_SYSPM_SUCCESS)
     {
+        /* Re-Initialize retarget-io to use the debug UART port */
+        cy_retarget_io_init(CYBSP_DEBUG_UART_TX, CYBSP_DEBUG_UART_RX, CY_RETARGET_IO_BAUDRATE);
         printf("Not entered Hibernate mode\r\n\n");
         CY_ASSERT(0);
     }
